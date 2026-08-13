@@ -113,18 +113,29 @@
     position:absolute;
     top:calc(100% + 8px);
     right:0;
-    width:280px;
+    width:320px;
     background:#fff;
     border:1px solid var(--ink);
     border-radius:8px;
     box-shadow:0 6px 18px rgba(0,0,0,.12);
-    padding:12px 14px;
+    padding:10px 12px;
     font-size:13px;
     color:var(--ink);
     z-index:60;
   }
-  .notif-dropdown .empty{color:var(--ink-soft); font-size:12.5px;}
-  .notif-dropdown .msg{margin-bottom:10px; line-height:1.5;}
+  .notif-dropdown .empty{color:var(--ink-soft); font-size:12.5px; padding:4px 2px;}
+  .notif-list{
+    max-height:280px;
+    overflow-y:auto;
+    margin-bottom:10px;
+  }
+  .notif-item{
+    padding:8px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .notif-item:last-child{border-bottom:none;}
+  .notif-item-msg{line-height:1.5;}
+  .notif-item-time{font-size:11px; color:var(--ink-soft); margin-top:3px;}
   .notif-dropdown .dismiss-btn{
     font-family:'Sarabun',sans-serif;
     font-size:12px;
@@ -134,6 +145,7 @@
     border-radius:16px;
     background:transparent;
     cursor:pointer;
+    width:100%;
   }
   .notif-dropdown .dismiss-btn:hover{background:var(--paper-2);}
 
@@ -472,7 +484,7 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.6</span></h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.7</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
     <div class="header-right">
@@ -959,21 +971,28 @@ function buildTable(data, weekIso){
   });
 }
 
+const WFH_NOTICE_KEY = 'wfh-notifications';
+const WFH_NOTICE_CAP = 30;
+
 async function saveWfhNotice(message){
   const ts = Date.now();
   try{
-    await storage.set('wfh-notice', JSON.stringify({ message, ts }));
+    const list = await loadWfhNotices();
+    list.unshift({ message, ts });
+    const trimmed = list.slice(0, WFH_NOTICE_CAP);
+    await storage.set(WFH_NOTICE_KEY, JSON.stringify(trimmed));
   }catch(e){ /* ignore */ }
   return ts;
 }
 
-async function loadWfhNotice(){
+async function loadWfhNotices(){
   try{
-    const res = await storage.get('wfh-notice');
-    if(!res || !res.value) return null;
-    return JSON.parse(res.value);
+    const res = await storage.get(WFH_NOTICE_KEY);
+    if(!res || !res.value) return [];
+    const list = JSON.parse(res.value);
+    return Array.isArray(list) ? list : [];
   }catch(e){
-    return null;
+    return [];
   }
 }
 
@@ -984,14 +1003,21 @@ async function render(){
 
 const BANNER_SEEN_KEY = 'wfhNoticeLastSeenTs';
 
+function fmtNoticeTime(ts){
+  try{
+    return new Date(ts).toLocaleString('th-TH', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  }catch(e){ return ''; }
+}
+
 async function renderTopBanner(){
   const wrap = document.getElementById('notifWrap');
   if(!wrap) return;
-  const notice = await loadWfhNotice();
+  const notices = await loadWfhNotices();
 
   let lastSeen = 0;
   try{ lastSeen = parseInt(localStorage.getItem(BANNER_SEEN_KEY) || '0', 10); }catch(e){ /* ignore */ }
-  const hasUnread = !!(notice && notice.message && notice.ts > lastSeen);
+  const newestTs = notices.length ? notices[0].ts : 0;
+  const hasUnread = newestTs > lastSeen;
 
   wrap.innerHTML = `
     <button class="notif-bell" id="notifBell" title="การแจ้งเตือน">
@@ -1006,10 +1032,13 @@ async function renderTopBanner(){
 
     const dropdown = document.createElement('div');
     dropdown.className = 'notif-dropdown';
-    if(notice && notice.message){
+    if(notices.length){
+      const items = notices.map(n =>
+        `<div class="notif-item"><div class="notif-item-msg">📌 ${escapeHtml(n.message)}</div><div class="notif-item-time">${fmtNoticeTime(n.ts)}</div></div>`
+      ).join('');
       dropdown.innerHTML = `
-        <div class="msg">📌 ${escapeHtml(notice.message)}</div>
-        <button class="dismiss-btn" id="dismissNotif">ปิด</button>
+        <div class="notif-list">${items}</div>
+        <button class="dismiss-btn" id="dismissNotif">ปิดทั้งหมด</button>
       `;
     } else {
       dropdown.innerHTML = `<div class="empty">ยังไม่มีการแจ้งเตือน</div>`;
@@ -1020,7 +1049,7 @@ async function renderTopBanner(){
     if(dismissBtn){
       dismissBtn.onclick = (ev)=>{
         ev.stopPropagation();
-        try{ localStorage.setItem(BANNER_SEEN_KEY, String(notice.ts)); }catch(err){ /* ignore */ }
+        try{ localStorage.setItem(BANNER_SEEN_KEY, String(newestTs)); }catch(err){ /* ignore */ }
         dropdown.remove();
         renderTopBanner();
       };
