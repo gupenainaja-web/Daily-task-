@@ -611,7 +611,7 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.11</span></h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.12</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
     <div class="header-right">
@@ -1108,6 +1108,26 @@ function hasValidWfhWindow(data, dayKey){
   return false;
 }
 
+function refreshWfhControls(data){
+  const table = document.getElementById('schedTable');
+  if(!table) return;
+  table.querySelectorAll('thead th').forEach((th, idx)=>{
+    if(idx === 0) return; // skip the hour-label column
+    const d = DAYS[idx - 1];
+    if(!d) return;
+    th.classList.toggle('wfh-day', !!data['wfh-' + d.key]);
+  });
+  table.querySelectorAll('.wfh-btn').forEach(btn=>{
+    const dayKey = btn.getAttribute('data-day-key');
+    const isWfh = !!data['wfh-' + dayKey];
+    const eligible = isWfh || hasValidWfhWindow(data, dayKey);
+    btn.disabled = !eligible;
+    btn.title = eligible ? '' : 'ต้องกรอกงาน 2 ชั่วโมง + พักเที่ยง 1 ชั่วโมง ติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ WFH วันนี้ได้';
+    btn.className = 'wfh-btn ' + (isWfh ? 'cancel' : 'request');
+    btn.textContent = isWfh ? 'ยกเลิกขอ Work from home' : 'ขอ Work from home';
+  });
+}
+
 function buildTable(data, weekIso){
   const table = document.getElementById('schedTable');
   if(!table) return;
@@ -1162,6 +1182,7 @@ function buildTable(data, weekIso){
       if(!type && !detail){ delete data[key]; } else { data[key] = {type, detail}; }
       slotEl.className = 'slot ' + typeClass(type);
       const ok = await saveSchedule(currentEmployeeId, weekIso, data);
+      refreshWfhControls(data);
       if(missingDetail){
         showToast('กรุณากรอกรายละเอียดสำหรับ "' + type + '"', true);
       } else if(ok){
