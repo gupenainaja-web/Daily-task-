@@ -134,7 +134,24 @@
     border-bottom:1px solid var(--line);
   }
   .notif-item:last-child{border-bottom:none;}
-  .notif-item-msg{line-height:1.5;}
+  .notif-item-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .notif-item-msg{line-height:1.5; flex:1 1 auto;}
+  .notif-item-close{
+    font-size:15px;
+    line-height:1;
+    background:transparent;
+    border:none;
+    color:var(--ink-soft);
+    cursor:pointer;
+    padding:0 2px;
+    flex:0 0 auto;
+  }
+  .notif-item-close:hover{color:var(--red);}
   .notif-item-time{font-size:11px; color:var(--ink-soft); margin-top:3px;}
   .notif-dropdown .dismiss-btn{
     font-family:'Sarabun',sans-serif;
@@ -594,7 +611,7 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.9</span></h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.11</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
     <div class="header-right">
@@ -615,7 +632,7 @@
     <span><i style="background:#FBEDD9"></i>งานฝ่าย</span>
     <span><i style="background:#E1EBF6"></i>พักทานอาหารกลางวัน</span>
     <span><i style="background:#8A4E86"></i>วันที่ขอ Work from home</span>
-    <span>ขอ WFH ได้เมื่อกรอกงานติดต่อกันครบ 3 ชม. ขึ้นไปในวันนั้น</span>
+    <span>ขอ WFH ได้เมื่อมีงาน 2 ชม. + พักเที่ยง 1 ชม. ติดต่อกันครบ 3 ชม. ในวันนั้น</span>
     <span>เลือกได้ 1 ตัวเลือกต่อช่อง (คลิกซ้ำเพื่อยกเลิก) · ต้องกรอกรายละเอียดเมื่อเลือก "เตรียมสอน" หรือ "งานฝ่าย" (พักเที่ยงไม่บังคับ) · ข้อมูลนี้แชร์ให้ทุกคนในทีมเห็นร่วมกัน</span>
   </div>
 
@@ -741,15 +758,19 @@ async function migrateOldEmployeesIfNeeded(){
     const old = await storage.get('employees');
     if(!old || !old.value) return;
     const arr = JSON.parse(old.value);
-    if(!Array.isArray(arr) || !arr.length) return;
-    for(const emp of arr){
-      if(!emp || !emp.id || !emp.name) continue;
-      const exists = await storage.get('employee:' + emp.id);
-      if(!exists || exists.value == null){
-        const withTs = Object.assign({ createdAt: Date.now() }, emp);
-        await storage.set('employee:' + emp.id, JSON.stringify(withTs));
+    if(Array.isArray(arr) && arr.length){
+      for(const emp of arr){
+        if(!emp || !emp.id || !emp.name) continue;
+        const exists = await storage.get('employee:' + emp.id);
+        if(!exists || exists.value == null){
+          const withTs = Object.assign({ createdAt: Date.now() }, emp);
+          await storage.set('employee:' + emp.id, JSON.stringify(withTs));
+        }
       }
     }
+    // One-time cleanup: remove the old combined key so it can never
+    // "resurrect" someone who gets deleted later from the new per-key list.
+    await storage.del(['employees']);
   }catch(e){ /* non-critical, ignore migration errors */ }
 }
 
@@ -1067,21 +1088,22 @@ function slotHtml(dayKey, hour, slotNum, data){
 
 const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 
-function hourHasData(data, dayKey, hour){
+function hourCategory(data, dayKey, hour){
   const s1 = data[dayKey + '-' + hour + '-s1'];
   const s2 = data[dayKey + '-' + hour + '-s2'];
-  return !!(s1 && s1.type) || !!(s2 && s2.type);
+  const types = [s1 && s1.type, s2 && s2.type].filter(Boolean);
+  if(types.includes(TYPE_OPTIONS[2])) return 'lunch';        // พักทานอาหารกลางวัน
+  if(types.some(t => REQUIRES_DETAIL.includes(t))) return 'work'; // เตรียมสอน / งานฝ่าย
+  return 'empty';
 }
 
-function hasThreeConsecutiveFilledHours(data, dayKey){
-  let streak = 0;
-  for(const h of HOURS){
-    if(hourHasData(data, dayKey, h)){
-      streak++;
-      if(streak >= 3) return true;
-    } else {
-      streak = 0;
-    }
+function hasValidWfhWindow(data, dayKey){
+  for(let i = 0; i + 3 <= HOURS.length; i++){
+    const window = HOURS.slice(i, i + 3);
+    const cats = window.map(h => hourCategory(data, dayKey, h));
+    const workCount = cats.filter(c => c === 'work').length;
+    const lunchCount = cats.filter(c => c === 'lunch').length;
+    if(workCount === 2 && lunchCount === 1) return true;
   }
   return false;
 }
@@ -1114,9 +1136,9 @@ function buildTable(data, weekIso){
   let tfoot = '<tfoot><tr class="wfh-row"><td class="hour-label">WFH</td>';
   DAYS.forEach((d)=>{
     const isWfh = !!data['wfh-' + d.key];
-    const eligible = isWfh || hasThreeConsecutiveFilledHours(data, d.key);
+    const eligible = isWfh || hasValidWfhWindow(data, d.key);
     const disabledAttr = eligible ? '' : 'disabled';
-    const title = eligible ? '' : 'title="ต้องกรอกงานอย่างน้อย 1 อย่างต่อชั่วโมง ติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ WFH วันนี้ได้"';
+    const title = eligible ? '' : 'title="ต้องกรอกงาน 2 ชั่วโมง + พักเที่ยง 1 ชั่วโมง ติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ WFH วันนี้ได้"';
     tfoot += `<td>
       <button type="button" class="wfh-btn ${isWfh ? 'cancel' : 'request'}" data-day-key="${d.key}" ${disabledAttr} ${title}>
         ${isWfh ? 'ยกเลิกขอ Work from home' : 'ขอ Work from home'}
@@ -1168,8 +1190,8 @@ function buildTable(data, weekIso){
       const dayKey = btn.getAttribute('data-day-key');
       const wfhKey = 'wfh-' + dayKey;
       const requesting = !data[wfhKey];
-      if(requesting && !hasThreeConsecutiveFilledHours(data, dayKey)){
-        showToast('ต้องกรอกงานติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ Work from home วันนี้ได้', true);
+      if(requesting && !hasValidWfhWindow(data, dayKey)){
+        showToast('ต้องกรอกงาน 2 ชั่วโมง + พักเที่ยง 1 ชั่วโมง ติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ Work from home วันนี้ได้', true);
         return;
       }
       const dayInfo = DAYS.find(d=>d.key===dayKey);
@@ -1221,7 +1243,23 @@ async function render(){
   await renderMain();
 }
 
-const BANNER_SEEN_KEY = 'wfhNoticeLastSeenTs';
+const DISMISSED_KEY = 'wfhNoticeDismissedTs';
+const DISMISSED_CAP = 60;
+
+function getDismissedSet(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]');
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+
+function addDismissed(ts){
+  try{
+    const arr = getDismissedSet();
+    arr.push(ts);
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify(arr.slice(-DISMISSED_CAP)));
+  }catch(e){ /* ignore */ }
+}
 
 function fmtNoticeTime(ts){
   try{
@@ -1233,11 +1271,9 @@ async function renderTopBanner(){
   const wrap = document.getElementById('notifWrap');
   if(!wrap) return;
   const notices = await loadWfhNotices();
-
-  let lastSeen = 0;
-  try{ lastSeen = parseInt(localStorage.getItem(BANNER_SEEN_KEY) || '0', 10); }catch(e){ /* ignore */ }
-  const newestTs = notices.length ? notices[0].ts : 0;
-  const hasUnread = newestTs > lastSeen;
+  const dismissed = getDismissedSet();
+  const visible = notices.filter(n => !dismissed.includes(n.ts));
+  const hasUnread = visible.length > 0;
 
   wrap.innerHTML = `
     <button class="notif-bell" id="notifBell" title="การแจ้งเตือน">
@@ -1252,28 +1288,8 @@ async function renderTopBanner(){
 
     const dropdown = document.createElement('div');
     dropdown.className = 'notif-dropdown';
-    if(notices.length){
-      const items = notices.map(n =>
-        `<div class="notif-item"><div class="notif-item-msg">📌 ${escapeHtml(n.message)}</div><div class="notif-item-time">${fmtNoticeTime(n.ts)}</div></div>`
-      ).join('');
-      dropdown.innerHTML = `
-        <div class="notif-list">${items}</div>
-        <button class="dismiss-btn" id="dismissNotif">ปิดทั้งหมด</button>
-      `;
-    } else {
-      dropdown.innerHTML = `<div class="empty">ยังไม่มีการแจ้งเตือน</div>`;
-    }
+    renderDropdownBody(dropdown, visible);
     wrap.appendChild(dropdown);
-
-    const dismissBtn = document.getElementById('dismissNotif');
-    if(dismissBtn){
-      dismissBtn.onclick = (ev)=>{
-        ev.stopPropagation();
-        try{ localStorage.setItem(BANNER_SEEN_KEY, String(newestTs)); }catch(err){ /* ignore */ }
-        dropdown.remove();
-        renderTopBanner();
-      };
-    }
 
     const closeOnOutsideClick = (ev)=>{
       if(!wrap.contains(ev.target)){
@@ -1283,6 +1299,48 @@ async function renderTopBanner(){
     };
     setTimeout(()=> document.addEventListener('click', closeOnOutsideClick), 0);
   };
+}
+
+function renderDropdownBody(dropdown, items){
+  if(!items.length){
+    dropdown.innerHTML = `<div class="empty">ยังไม่มีการแจ้งเตือน</div>`;
+    return;
+  }
+  const rows = items.map(n => `
+    <div class="notif-item" data-ts="${n.ts}">
+      <div class="notif-item-top">
+        <div class="notif-item-msg">📌 ${escapeHtml(n.message)}</div>
+        <button class="notif-item-close" data-ts="${n.ts}" title="ปิดรายการนี้">&times;</button>
+      </div>
+      <div class="notif-item-time">${fmtNoticeTime(n.ts)}</div>
+    </div>`
+  ).join('');
+  dropdown.innerHTML = `
+    <div class="notif-list">${rows}</div>
+    <button class="dismiss-btn" id="dismissNotif">ปิดทั้งหมด</button>
+  `;
+
+  dropdown.querySelectorAll('.notif-item-close').forEach(btn=>{
+    btn.onclick = (ev)=>{
+      ev.stopPropagation();
+      const ts = Number(btn.getAttribute('data-ts'));
+      addDismissed(ts);
+      const remaining = items.filter(n => n.ts !== ts);
+      items = remaining;
+      renderDropdownBody(dropdown, remaining);
+      renderTopBanner();
+    };
+  });
+
+  const dismissBtn = dropdown.querySelector('#dismissNotif');
+  if(dismissBtn){
+    dismissBtn.onclick = (ev)=>{
+      ev.stopPropagation();
+      items.forEach(n => addDismissed(n.ts));
+      dropdown.remove();
+      renderTopBanner();
+    };
+  }
 }
 
 (async function init(){
