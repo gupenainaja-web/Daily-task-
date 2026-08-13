@@ -306,6 +306,7 @@
     display:flex;
     align-items:center;
     gap:8px;
+    flex-wrap:wrap;
     padding:6px 10px;
     background:var(--red-light);
     border:1px solid var(--red);
@@ -401,17 +402,57 @@
     cursor:pointer;
   }
   .modal-tab.active{background:var(--ink); color:var(--paper);}
+  .modal-emp-block{
+    padding:10px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .modal-emp-block:last-child{border-bottom:none;}
+  .modal-emp-name{
+    font-weight:700;
+    font-size:13px;
+    margin-bottom:6px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .wfh-tag{
+    font-size:10.5px;
+    font-weight:600;
+    background:#EFE3EE;
+    color:#5A3257;
+    padding:2px 9px;
+    border-radius:10px;
+  }
+  .modal-normal-tag{
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .modal-row-empty{
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:4px 0;
+  }
+  .name-list{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .name-list-item{
+    padding:9px 6px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    font-weight:600;
+  }
+  .name-list-item:last-child{border-bottom:none;}
   .modal-row{
     display:grid;
-    grid-template-columns:90px 110px 100px 1fr;
+    grid-template-columns:90px 100px 1fr;
     gap:8px;
     align-items:center;
-    padding:7px 4px;
-    border-bottom:1px solid var(--line);
+    padding:5px 4px;
     font-size:12.5px;
   }
   .modal-row-hour{font-family:'Space Grotesk',sans-serif; font-weight:600; color:var(--brass-dark);}
-  .modal-row-name{font-weight:600;}
   .modal-row-type{
     font-size:11px;
     padding:2px 8px;
@@ -611,7 +652,7 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.12</span></h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.14</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
     <div class="header-right">
@@ -954,6 +995,8 @@ function renderAdminBar(){
       <div id="adminPanel" class="admin-panel" style="display:none;">
         <span class="label">คำสั่งแอดมิน:</span>
         <button id="viewAllBtn" class="admin-view-btn">ดูตารางคุณครูทั้งหมด</button>
+        <button id="viewNormalBtn" class="admin-view-btn">ผู้เข้างานปกติ</button>
+        <button id="viewWfhBtn" class="admin-view-btn">ผู้ขอ Work from home</button>
         <button id="clearAllBtn" class="admin-danger-btn">เคลียร์ข้อมูลทั้งหมดของทุกคน</button>
       </div>
     </div>
@@ -983,6 +1026,8 @@ function renderAdminBar(){
     }
   };
   document.getElementById('viewAllBtn').onclick = showAllSchedulesModal;
+  document.getElementById('viewNormalBtn').onclick = ()=> showNameListModal('ผู้เข้างานปกติ', false);
+  document.getElementById('viewWfhBtn').onclick = ()=> showNameListModal('ผู้ขอ Work from home', true);
 }
 
 async function showAllSchedulesModal(){
@@ -1012,36 +1057,62 @@ async function showAllSchedulesModal(){
   const weekIso = isoDate(weekStart);
   const allData = await Promise.all(employees.map(emp => loadSchedule(emp.id, weekIso)));
 
-  // perDay[dayKey] = array of { hour, empName, type, detail }
+  // perDay[dayKey] = array of { empName, isWfh, slots: [{hour, type, detail}] }
   const perDay = {};
   DAYS.forEach(d => perDay[d.key] = []);
   employees.forEach((emp, i)=>{
     const data = allData[i];
     DAYS.forEach(d=>{
+      const isWfh = !!data['wfh-' + d.key];
+      if(!isWfh){
+        perDay[d.key].push({ empName: emp.name, isWfh: false, slots: [] });
+        return;
+      }
+      const slots = [];
       HOURS.forEach(h=>{
         [1,2].forEach(slotNum=>{
           const entry = data[d.key + '-' + h + '-s' + slotNum];
           if(entry && entry.type){
-            perDay[d.key].push({ hour: h, empName: emp.name, type: entry.type, detail: entry.detail || '' });
+            slots.push({ hour: h, type: entry.type, detail: entry.detail || '' });
           }
         });
       });
+      slots.sort((a,b)=> a.hour - b.hour);
+      perDay[d.key].push({ empName: emp.name, isWfh: true, slots });
     });
   });
-  DAYS.forEach(d => perDay[d.key].sort((a,b)=> a.hour - b.hour || a.empName.localeCompare(b.empName, 'th')));
+  DAYS.forEach(d => perDay[d.key].sort((a,b)=>{
+    if(a.isWfh !== b.isWfh) return a.isWfh ? -1 : 1;
+    return a.empName.localeCompare(b.empName, 'th');
+  }));
 
   const tabs = DAYS.map((d,i) => `<button class="modal-tab${i===0?' active':''}" data-day="${d.key}">${d.label}</button>`).join('');
   const panels = DAYS.map((d,i) => {
     const rows = perDay[d.key];
     const rowsHtml = rows.length
-      ? rows.map(r => `
-          <div class="modal-row">
-            <span class="modal-row-hour">${r.hour}:00–${r.hour+1}:00</span>
-            <span class="modal-row-name">${escapeHtml(r.empName)}</span>
-            <span class="modal-row-type ${typeClass(r.type)}">${escapeHtml(r.type)}</span>
-            <span class="modal-row-detail">${escapeHtml(r.detail)}</span>
-          </div>`).join('')
-      : '<div class="empty-note">ไม่มีข้อมูลลงไว้ในวันนี้</div>';
+      ? rows.map(r => {
+          if(r.isWfh){
+            const slotRows = r.slots.length
+              ? r.slots.map(s => `
+                  <div class="modal-row">
+                    <span class="modal-row-hour">${s.hour}:00–${s.hour+1}:00</span>
+                    <span class="modal-row-type ${typeClass(s.type)}">${escapeHtml(s.type)}</span>
+                    <span class="modal-row-detail">${escapeHtml(s.detail)}</span>
+                  </div>`).join('')
+              : '<div class="modal-row-empty">ไม่มีรายละเอียดงานลงไว้</div>';
+            return `
+              <div class="modal-emp-block wfh">
+                <div class="modal-emp-name">${escapeHtml(r.empName)} <span class="wfh-tag">ขอ WFH</span></div>
+                ${slotRows}
+              </div>`;
+          }
+          return `
+            <div class="modal-emp-block normal">
+              <div class="modal-emp-name">${escapeHtml(r.empName)}</div>
+              <div class="modal-normal-tag">เข้างานปกติ</div>
+            </div>`;
+        }).join('')
+      : '<div class="empty-note">ยังไม่มีรายชื่อพนักงาน</div>';
     return `<div class="modal-panel" data-day="${d.key}" style="display:${i===0?'block':'none'}">${rowsHtml}</div>`;
   }).join('');
 
@@ -1050,6 +1121,10 @@ async function showAllSchedulesModal(){
     ${panels}
   `;
 
+  wireModalTabs();
+}
+
+function wireModalTabs(){
   document.querySelectorAll('.modal-tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
       const day = tab.getAttribute('data-day');
@@ -1059,6 +1134,61 @@ async function showAllSchedulesModal(){
       });
     });
   });
+}
+
+async function showNameListModal(title, wantWfh){
+  const modalHolder = document.getElementById('allScheduleModal');
+  if(!modalHolder) return;
+  modalHolder.innerHTML = `
+    <div class="modal-backdrop" id="allModalBackdrop">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div class="modal-title">${escapeHtml(title)} · ${fmtRange()}</div>
+          <button class="modal-close" id="allModalClose">&times;</button>
+        </div>
+        <div class="modal-body"><div class="empty-note">กำลังโหลดข้อมูล...</div></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('allModalClose').onclick = ()=>{ modalHolder.innerHTML = ''; };
+  document.getElementById('allModalBackdrop').onclick = (e)=>{
+    if(e.target.id === 'allModalBackdrop') modalHolder.innerHTML = '';
+  };
+
+  if(!employees.length){
+    document.querySelector('.modal-body').innerHTML = '<div class="empty-note">ยังไม่มีรายชื่อพนักงาน</div>';
+    return;
+  }
+
+  const weekIso = isoDate(weekStart);
+  const allData = await Promise.all(employees.map(emp => loadSchedule(emp.id, weekIso)));
+
+  const perDay = {};
+  DAYS.forEach(d => perDay[d.key] = []);
+  employees.forEach((emp, i)=>{
+    const data = allData[i];
+    DAYS.forEach(d=>{
+      const isWfh = !!data['wfh-' + d.key];
+      if(isWfh === wantWfh) perDay[d.key].push(emp.name);
+    });
+  });
+  DAYS.forEach(d => perDay[d.key].sort((a,b)=> a.localeCompare(b, 'th')));
+
+  const tabs = DAYS.map((d,i) => `<button class="modal-tab${i===0?' active':''}" data-day="${d.key}">${d.label}</button>`).join('');
+  const panels = DAYS.map((d,i) => {
+    const names = perDay[d.key];
+    const listHtml = names.length
+      ? '<div class="name-list">' + names.map(n => `<div class="name-list-item">${escapeHtml(n)}</div>`).join('') + '</div>'
+      : `<div class="empty-note">ไม่มีใคร${wantWfh ? 'ขอ Work from home' : 'เข้างานปกติ'}ในวันนี้</div>`;
+    return `<div class="modal-panel" data-day="${d.key}" style="display:${i===0?'block':'none'}">${listHtml}</div>`;
+  }).join('');
+
+  document.querySelector('.modal-body').innerHTML = `
+    <div class="modal-tabs">${tabs}</div>
+    ${panels}
+  `;
+
+  wireModalTabs();
 }
 
 const TYPE_OPTIONS = ['เตรียมสอน', 'งานฝ่าย', 'พักทานอาหารกลางวัน'];
@@ -1216,6 +1346,9 @@ function buildTable(data, weekIso){
         return;
       }
       const dayInfo = DAYS.find(d=>d.key===dayKey);
+      if(!requesting){
+        if(!confirm('ยืนยันยกเลิกขอ Work from home วัน' + dayInfo.label + '?')) return;
+      }
       if(requesting){ data[wfhKey] = true; } else { delete data[wfhKey]; }
       const ok = await saveSchedule(currentEmployeeId, weekIso, data);
       buildTable(data, weekIso);
