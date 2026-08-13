@@ -472,7 +472,7 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.5</span></h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.6</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
     <div class="header-right">
@@ -609,20 +609,44 @@ function markCurrentHourCell(){
   if(cell) cell.classList.add('now');
 }
 
+async function migrateOldEmployeesIfNeeded(){
+  try{
+    const old = await storage.get('employees');
+    if(!old || !old.value) return;
+    const arr = JSON.parse(old.value);
+    if(!Array.isArray(arr) || !arr.length) return;
+    for(const emp of arr){
+      if(!emp || !emp.id || !emp.name) continue;
+      const exists = await storage.get('employee:' + emp.id);
+      if(!exists || exists.value == null){
+        const withTs = Object.assign({ createdAt: Date.now() }, emp);
+        await storage.set('employee:' + emp.id, JSON.stringify(withTs));
+      }
+    }
+  }catch(e){ /* non-critical, ignore migration errors */ }
+}
+
 async function loadEmployees(){
   try{
-    const res = await storage.get('employees');
-    employees = res ? JSON.parse(res.value) : [];
+    const keys = await storage.list('employee:');
+    if(!keys.length){ employees = []; return; }
+    const results = await Promise.all(keys.map(k => storage.get(k).catch(()=>null)));
+    employees = results
+      .filter(r => r && r.value)
+      .map(r => { try{ return JSON.parse(r.value); }catch(e){ return null; } })
+      .filter(e => e && e.id && e.name)
+      .sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
   }catch(e){
     employees = [];
   }
 }
-async function saveEmployees(){
-  try{
-    await storage.set('employees', JSON.stringify(employees));
-  }catch(e){
-    showToast('บันทึกรายชื่อไม่สำเร็จ ลองใหม่อีกครั้ง', true);
-  }
+
+async function addEmployeeToStore(emp){
+  await storage.set('employee:' + emp.id, JSON.stringify(emp));
+}
+
+async function deleteEmployeeFromStore(id){
+  await storage.del(['employee:' + id]);
 }
 
 async function loadSchedule(empId, weekIso){
@@ -684,8 +708,13 @@ function renderEmpBar(){
     if(pw === null) return;
     if(pw !== 'admin01'){ showToast('รหัสผ่านไม่ถูกต้อง', true); return; }
     if(!confirm('ยืนยันลบ "' + emp.name + '" ออกจากรายชื่อ? (ประวัติงานเดิมจะยังเก็บไว้)')) return;
-    employees = employees.filter(e=>e.id!==emp.id);
-    await saveEmployees();
+    try{
+      await deleteEmployeeFromStore(emp.id);
+    }catch(e){
+      showToast('ลบไม่สำเร็จ ลองใหม่อีกครั้ง', true);
+      return;
+    }
+    await loadEmployees();
     currentEmployeeId = employees.length ? employees[0].id : null;
     render();
   };
@@ -714,9 +743,15 @@ async function addEmployee(){
   const name = input.value.trim();
   if(!name){ showToast('พิมพ์ชื่อก่อนนะ', true); return; }
   const id = slugify(name) + '-' + Math.random().toString(36).slice(2,6);
-  employees.push({id, name});
+  const emp = { id, name, createdAt: Date.now() };
   input.value = '';
-  await saveEmployees();
+  try{
+    await addEmployeeToStore(emp);
+  }catch(e){
+    showToast('เพิ่มชื่อไม่สำเร็จ ลองใหม่อีกครั้ง', true);
+    return;
+  }
+  await loadEmployees();
   currentEmployeeId = id;
   render();
 }
@@ -1005,6 +1040,7 @@ async function renderTopBanner(){
   renderAdminBar();
   await renderTopBanner();
   document.getElementById('mainArea').innerHTML = '<div class="empty-note">กำลังโหลดข้อมูล...</div>';
+  await migrateOldEmployeesIfNeeded();
   await loadEmployees();
   if(employees.length) currentEmployeeId = employees[0].id;
   await render();
