@@ -45,6 +45,20 @@
     font-weight:700;
     margin:0;
     letter-spacing:0.2px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .version-badge{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    color:var(--ink-soft);
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    padding:2px 8px;
+    border-radius:10px;
+    letter-spacing:0.3px;
   }
   header.top .sub{
     font-size:13px;
@@ -61,6 +75,67 @@
     border-radius:3px;
     white-space:nowrap;
   }
+  .header-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .notif-wrap{
+    position:relative;
+  }
+  .notif-bell{
+    position:relative;
+    font-size:19px;
+    line-height:1;
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:50%;
+    width:38px;
+    height:38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .notif-bell:hover{background:#fff;}
+  .notif-dot{
+    position:absolute;
+    top:5px;
+    right:5px;
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--red);
+    border:1.5px solid var(--paper);
+  }
+  .notif-dropdown{
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0;
+    width:280px;
+    background:#fff;
+    border:1px solid var(--ink);
+    border-radius:8px;
+    box-shadow:0 6px 18px rgba(0,0,0,.12);
+    padding:12px 14px;
+    font-size:13px;
+    color:var(--ink);
+    z-index:60;
+  }
+  .notif-dropdown .empty{color:var(--ink-soft); font-size:12.5px;}
+  .notif-dropdown .msg{margin-bottom:10px; line-height:1.5;}
+  .notif-dropdown .dismiss-btn{
+    font-family:'Sarabun',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    padding:5px 12px;
+    border:1px solid var(--ink);
+    border-radius:16px;
+    background:transparent;
+    cursor:pointer;
+  }
+  .notif-dropdown .dismiss-btn:hover{background:var(--paper-2);}
 
   /* employee bar */
   .emp-bar{
@@ -70,33 +145,50 @@
     flex-wrap:wrap;
     margin-bottom:18px;
   }
-  .emp-chip{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:13.5px;
-    font-weight:600;
-    padding:7px 14px;
-    border:1.5px solid var(--ink);
-    border-radius:20px;
-    background:transparent;
-    cursor:pointer;
-    color:var(--ink);
+  .emp-select-wrap{
     display:flex;
     align-items:center;
-    gap:8px;
-    transition:background .12s, color .12s;
+    gap:6px;
   }
-  .emp-chip:hover{background:var(--paper-2);}
-  .emp-chip.active{background:var(--ink);color:var(--paper);}
-  .emp-chip .del{
-    font-size:11px;
-    opacity:.55;
-    padding:0 2px;
+  .emp-select{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    padding:8px 12px;
+    border:1.5px solid var(--ink);
+    border-radius:6px;
+    background:#fff;
+    color:var(--ink);
+    cursor:pointer;
+    min-width:180px;
+    max-width:260px;
   }
-  .emp-chip .del:hover{opacity:1;color:var(--red);}
+  .emp-select:focus{outline:2px solid var(--brass); outline-offset:1px;}
+  .emp-del-btn{
+    font-family:'Sarabun',sans-serif;
+    font-size:12.5px;
+    padding:8px 12px;
+    border:1.5px solid var(--red);
+    border-radius:6px;
+    background:#fff;
+    color:var(--red);
+    cursor:pointer;
+  }
+  .emp-del-btn:hover{background:var(--red-light);}
+  .emp-del-btn:disabled{opacity:.4; cursor:not-allowed;}
+  .emp-count{
+    font-size:12px;
+    color:var(--ink-soft);
+  }
   .emp-add{
     display:flex;
     gap:6px;
-    align-items:center;
+    align-items:flex-start;
+  }
+  .emp-add-field{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
   }
   .emp-add input{
     font-family:'Sarabun',sans-serif;
@@ -109,6 +201,11 @@
     outline:none;
   }
   .emp-add input:focus{border-color:var(--brass);}
+  .emp-add-hint{
+    font-size:11px;
+    color:var(--ink-soft);
+    padding-left:12px;
+  }
   .emp-add button{
     font-family:'Sarabun',sans-serif;
     font-size:13px;
@@ -119,6 +216,7 @@
     background:var(--brass);
     color:#fff;
     cursor:pointer;
+    flex:0 0 auto;
   }
   .emp-add button:hover{background:var(--brass-dark);}
 
@@ -155,6 +253,77 @@
   }
   .week-nav button:hover{background:var(--paper-2);}
   .week-nav .nav-group{display:flex;gap:6px;}
+
+  /* admin bar */
+  .admin-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .admin-btn{
+    font-family:'Sarabun',sans-serif;
+    font-size:12px;
+    padding:5px 12px;
+    border:1px dashed var(--ink-soft);
+    border-radius:20px;
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .admin-btn:hover{background:var(--paper-2); color:var(--ink);}
+  .admin-panel{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    background:var(--red-light);
+    border:1px solid var(--red);
+    border-radius:6px;
+  }
+  .admin-panel .label{font-size:11.5px; color:var(--ink-soft);}
+  .admin-danger-btn{
+    font-family:'Sarabun',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border:1px solid var(--red);
+    border-radius:6px;
+    background:#fff;
+    color:var(--red);
+    cursor:pointer;
+  }
+  .admin-danger-btn:hover{background:var(--red); color:#fff;}
+
+  /* WFH */
+  th.wfh-day{background:#8A4E86 !important;}
+  .wfh-row td{
+    background:var(--paper-2);
+    text-align:center;
+    padding:8px 6px;
+  }
+  .wfh-btn{
+    font-family:'Sarabun',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    width:100%;
+  }
+  .wfh-btn.request{
+    border:1.5px solid #8A4E86;
+    background:#EFE3EE;
+    color:#5A3257;
+  }
+  .wfh-btn.request:hover{background:#8A4E86; color:#fff;}
+  .wfh-btn.cancel{
+    border:1.5px solid var(--red);
+    background:#fff;
+    color:var(--red);
+  }
+  .wfh-btn.cancel:hover{background:var(--red); color:#fff;}
 
   /* table */
   .grid-wrap{
@@ -303,11 +472,16 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home</h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.5</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
-    <div class="clock" id="clock">--:--:--</div>
+    <div class="header-right">
+      <div class="notif-wrap" id="notifWrap"></div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
   </header>
+
+  <div id="adminBarHolder"></div>
 
   <div class="emp-bar" id="empBar"></div>
 
@@ -318,7 +492,8 @@
     <span><i style="background:var(--teal-light)"></i>เตรียมสอน</span>
     <span><i style="background:#FBEDD9"></i>งานฝ่าย</span>
     <span><i style="background:#E1EBF6"></i>พักทานอาหารกลางวัน</span>
-    <span>เลือกได้ 1 ตัวเลือกต่อช่อง · ต้องกรอกรายละเอียดเมื่อเลือก "เตรียมสอน" หรือ "งานฝ่าย" (พักเที่ยงไม่บังคับ) · ข้อมูลนี้แชร์ให้ทุกคนในทีมเห็นร่วมกัน</span>
+    <span><i style="background:#8A4E86"></i>วันที่ขอ Work from home</span>
+    <span>เลือกได้ 1 ตัวเลือกต่อช่อง (คลิกซ้ำเพื่อยกเลิก) · ต้องกรอกรายละเอียดเมื่อเลือก "เตรียมสอน" หรือ "งานฝ่าย" (พักเที่ยงไม่บังคับ) · ข้อมูลนี้แชร์ให้ทุกคนในทีมเห็นร่วมกัน</span>
   </div>
 
   <div class="note-box">ในการขอ Work from home ให้ปฏิบัติตามข้อกำหนด</div>
@@ -345,6 +520,21 @@ const storage = {
     });
     if(!r.ok) throw new Error('storage set failed: ' + r.status);
     return { key, value };
+  },
+  async list(prefix){
+    const r = await fetch('/api/storage?action=list&prefix=' + encodeURIComponent(prefix || ''));
+    if(!r.ok) throw new Error('storage list failed: ' + r.status);
+    const data = await r.json();
+    return data.keys || [];
+  },
+  async del(keys){
+    const r = await fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'del', keys })
+    });
+    if(!r.ok) throw new Error('storage del failed: ' + r.status);
+    return await r.json();
   }
 };
 
@@ -463,30 +653,54 @@ async function saveSchedule(empId, weekIso, data){
 function renderEmpBar(){
   const bar = document.getElementById('empBar');
   bar.innerHTML = '';
-  employees.forEach(emp=>{
-    const chip = document.createElement('button');
-    chip.className = 'emp-chip' + (emp.id === currentEmployeeId ? ' active' : '');
-    chip.innerHTML = '<span>' + escapeHtml(emp.name) + '</span><span class="del" title="ลบชื่อนี้">&times;</span>';
-    chip.querySelector('span:first-child').onclick = () => { currentEmployeeId = emp.id; render(); };
-    chip.querySelector('.del').onclick = async (ev) => {
-      ev.stopPropagation();
-      const pw = prompt('กรอกรหัสผ่าน admin เพื่อลบ "' + emp.name + '"');
-      if(pw === null) return;
-      if(pw !== 'admin01'){ showToast('รหัสผ่านไม่ถูกต้อง', true); return; }
-      if(!confirm('ยืนยันลบ "' + emp.name + '" ออกจากรายชื่อ? (ประวัติงานเดิมจะยังเก็บไว้)')) return;
-      employees = employees.filter(e=>e.id!==emp.id);
-      await saveEmployees();
-      if(currentEmployeeId === emp.id){
-        currentEmployeeId = employees.length ? employees[0].id : null;
-      }
-      render();
-    };
-    bar.appendChild(chip);
+
+  const selectWrap = document.createElement('div');
+  selectWrap.className = 'emp-select-wrap';
+
+  const select = document.createElement('select');
+  select.className = 'emp-select';
+  if(!employees.length){
+    select.innerHTML = '<option value="">— ยังไม่มีรายชื่อ —</option>';
+    select.disabled = true;
+  } else {
+    select.innerHTML = employees.map(emp =>
+      `<option value="${emp.id}"${emp.id === currentEmployeeId ? ' selected' : ''}>${escapeHtml(emp.name)}</option>`
+    ).join('');
+  }
+  select.addEventListener('change', ()=>{
+    currentEmployeeId = select.value;
+    render();
   });
+  selectWrap.appendChild(select);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'emp-del-btn';
+  delBtn.textContent = 'ลบชื่อนี้';
+  delBtn.disabled = !employees.length;
+  delBtn.onclick = async ()=>{
+    const emp = employees.find(e=>e.id===currentEmployeeId);
+    if(!emp) return;
+    const pw = prompt('กรอกรหัสผ่าน admin เพื่อลบ "' + emp.name + '"');
+    if(pw === null) return;
+    if(pw !== 'admin01'){ showToast('รหัสผ่านไม่ถูกต้อง', true); return; }
+    if(!confirm('ยืนยันลบ "' + emp.name + '" ออกจากรายชื่อ? (ประวัติงานเดิมจะยังเก็บไว้)')) return;
+    employees = employees.filter(e=>e.id!==emp.id);
+    await saveEmployees();
+    currentEmployeeId = employees.length ? employees[0].id : null;
+    render();
+  };
+  selectWrap.appendChild(delBtn);
+
+  const count = document.createElement('span');
+  count.className = 'emp-count';
+  count.textContent = employees.length ? `(${employees.length} คน)` : '';
+  selectWrap.appendChild(count);
+
+  bar.appendChild(selectWrap);
 
   const addWrap = document.createElement('div');
   addWrap.className = 'emp-add';
-  addWrap.innerHTML = '<input type="text" id="newEmpName" placeholder="ชื่อพนักงาน" maxlength="40"><button id="addEmpBtn">+ เพิ่มชื่อ</button>';
+  addWrap.innerHTML = '<div class="emp-add-field"><input type="text" id="newEmpName" placeholder="ชื่อคุณครู" maxlength="40"><div class="emp-add-hint">ใส่ชื่อเล่น (ชื่อจริง)</div></div><button id="addEmpBtn">+ เพิ่มชื่อ</button>';
   bar.appendChild(addWrap);
 
   document.getElementById('addEmpBtn').onclick = addEmployee;
@@ -526,6 +740,7 @@ async function renderMain(){
   if(!emp){ currentEmployeeId = employees[0].id; return renderMain(); }
 
   const weekIso = isoDate(weekStart);
+
   main.innerHTML = `
     <div class="week-nav">
       <button id="prevWeek">&larr; สัปดาห์ก่อน</button>
@@ -542,8 +757,46 @@ async function renderMain(){
   document.getElementById('thisWeek').onclick = ()=>{ weekStart = getTuesdayOfWeek(new Date()); renderMain(); };
 
   const data = await loadSchedule(currentEmployeeId, weekIso);
+
   buildTable(data, weekIso);
   markCurrentHourCell();
+}
+
+function renderAdminBar(){
+  const adminHolder = document.getElementById('adminBarHolder');
+  if(!adminHolder) return;
+  adminHolder.innerHTML = `
+    <div class="admin-bar">
+      <button id="adminBtn" class="admin-btn">สำหรับแอดมิน</button>
+      <div id="adminPanel" class="admin-panel" style="display:none;">
+        <span class="label">คำสั่งแอดมิน:</span>
+        <button id="clearAllBtn" class="admin-danger-btn">เคลียร์ข้อมูลทั้งหมดของทุกคน</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('adminBtn').onclick = ()=>{
+    const panel = document.getElementById('adminPanel');
+    if(panel.style.display === 'flex'){ panel.style.display = 'none'; return; }
+    const pw = prompt('กรอกรหัสผ่าน admin');
+    if(pw === null) return;
+    if(pw !== 'admin01'){ showToast('รหัสผ่านไม่ถูกต้อง', true); return; }
+    panel.style.display = 'flex';
+  };
+  document.getElementById('clearAllBtn').onclick = async ()=>{
+    if(!confirm('ยืนยันเคลียร์ข้อมูลตารางเวลาของ "พนักงานทุกคน ทุกสัปดาห์" ทั้งหมด? การกระทำนี้ย้อนกลับไม่ได้ และไม่สามารถกู้คืนได้')) return;
+    try{
+      const keys = await storage.list('sched:');
+      if(keys.length){
+        await storage.del(keys);
+      }
+      scheduleCache = {};
+      document.getElementById('adminPanel').style.display = 'none';
+      await renderMain();
+      showToast('เคลียร์ข้อมูลทั้งหมดของทุกคนแล้ว (' + keys.length + ' รายการ)');
+    }catch(e){
+      showToast('เคลียร์ข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง', true);
+    }
+  };
 }
 
 const TYPE_OPTIONS = ['เตรียมสอน', 'งานฝ่าย', 'พักทานอาหารกลางวัน'];
@@ -562,7 +815,8 @@ function slotHtml(dayKey, hour, slotNum, data){
   let radios = '';
   TYPE_OPTIONS.forEach(t=>{
     const checked = entry.type === t ? ' checked' : '';
-    radios += `<label><input type="radio" name="${key}" value="${t}"${checked}> ${t}</label>`;
+    const wasChecked = entry.type === t ? ' data-was-checked="true"' : ' data-was-checked="false"';
+    radios += `<label><input type="radio" name="${key}" value="${t}"${checked}${wasChecked}> ${t}</label>`;
   });
   return `<div class="slot ${typeClass(entry.type)}" data-key="${key}">
     <div class="radio-group">${radios}</div>
@@ -570,13 +824,16 @@ function slotHtml(dayKey, hour, slotNum, data){
   </div>`;
 }
 
+const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
 function buildTable(data, weekIso){
   const table = document.getElementById('schedTable');
   if(!table) return;
   let thead = '<thead><tr><th class="hourcol">เวลา</th>';
   DAYS.forEach((d)=>{
     const date = addDays(weekStart, d.offset);
-    thead += `<th>${d.label}<span class="d">${date.toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span></th>`;
+    const isWfh = !!data['wfh-' + d.key];
+    thead += `<th class="${isWfh ? 'wfh-day' : ''}">${d.label}<span class="d">${date.toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span></th>`;
   });
   thead += '</tr></thead>';
 
@@ -593,7 +850,19 @@ function buildTable(data, weekIso){
     tbody += '</tr>';
   });
   tbody += '</tbody>';
-  table.innerHTML = thead + tbody;
+
+  let tfoot = '<tfoot><tr class="wfh-row"><td class="hour-label">WFH</td>';
+  DAYS.forEach((d)=>{
+    const isWfh = !!data['wfh-' + d.key];
+    tfoot += `<td>
+      <button type="button" class="wfh-btn ${isWfh ? 'cancel' : 'request'}" data-day-key="${d.key}">
+        ${isWfh ? 'ยกเลิกขอ Work from home' : 'ขอ Work from home'}
+      </button>
+    </td>`;
+  });
+  tfoot += '</tr></tfoot>';
+
+  table.innerHTML = thead + tbody + tfoot;
 
   table.querySelectorAll('.slot').forEach(slotEl=>{
     const key = slotEl.getAttribute('data-key');
@@ -614,12 +883,63 @@ function buildTable(data, weekIso){
         showToast('บันทึกแล้ว');
       }
     };
-    radios.forEach(r=> r.addEventListener('change', save));
+    radios.forEach(r=>{
+      r.addEventListener('click', ()=>{
+        if(r.dataset.wasChecked === 'true'){
+          r.checked = false;
+        }
+        setTimeout(()=>{
+          radios.forEach(rr=>{ rr.dataset.wasChecked = rr.checked ? 'true' : 'false'; });
+          save();
+        }, 0);
+      });
+    });
     inp.addEventListener('blur', save);
     inp.addEventListener('keydown', (e)=>{
       if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); }
     });
   });
+
+  table.querySelectorAll('.wfh-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const dayKey = btn.getAttribute('data-day-key');
+      const dayInfo = DAYS.find(d=>d.key===dayKey);
+      const wfhKey = 'wfh-' + dayKey;
+      const requesting = !data[wfhKey];
+      if(requesting){ data[wfhKey] = true; } else { delete data[wfhKey]; }
+      const ok = await saveSchedule(currentEmployeeId, weekIso, data);
+      buildTable(data, weekIso);
+      markCurrentHourCell();
+      if(!ok) return;
+
+      const emp = employees.find(e=>e.id===currentEmployeeId);
+      const date = addDays(weekStart, dayInfo.offset);
+      const dateLine = `วัน${dayInfo.label}ที่ ${date.getDate()} เดือน${THAI_MONTHS[date.getMonth()]}`;
+      const action = requesting ? 'มีการขอ Work from home' : 'ยกเลิกขอ Work from home';
+      const message = `${emp ? emp.name : ''}: ${dateLine} ${action}`;
+      await saveWfhNotice(message);
+      renderTopBanner();
+      showToast(requesting ? 'ขอ Work from home แล้ว' : 'ยกเลิกขอ Work from home แล้ว');
+    });
+  });
+}
+
+async function saveWfhNotice(message){
+  const ts = Date.now();
+  try{
+    await storage.set('wfh-notice', JSON.stringify({ message, ts }));
+  }catch(e){ /* ignore */ }
+  return ts;
+}
+
+async function loadWfhNotice(){
+  try{
+    const res = await storage.get('wfh-notice');
+    if(!res || !res.value) return null;
+    return JSON.parse(res.value);
+  }catch(e){
+    return null;
+  }
 }
 
 async function render(){
@@ -627,7 +947,63 @@ async function render(){
   await renderMain();
 }
 
+const BANNER_SEEN_KEY = 'wfhNoticeLastSeenTs';
+
+async function renderTopBanner(){
+  const wrap = document.getElementById('notifWrap');
+  if(!wrap) return;
+  const notice = await loadWfhNotice();
+
+  let lastSeen = 0;
+  try{ lastSeen = parseInt(localStorage.getItem(BANNER_SEEN_KEY) || '0', 10); }catch(e){ /* ignore */ }
+  const hasUnread = !!(notice && notice.message && notice.ts > lastSeen);
+
+  wrap.innerHTML = `
+    <button class="notif-bell" id="notifBell" title="การแจ้งเตือน">
+      🔔${hasUnread ? '<span class="notif-dot"></span>' : ''}
+    </button>
+  `;
+
+  document.getElementById('notifBell').onclick = (e)=>{
+    e.stopPropagation();
+    const existing = wrap.querySelector('.notif-dropdown');
+    if(existing){ existing.remove(); return; }
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'notif-dropdown';
+    if(notice && notice.message){
+      dropdown.innerHTML = `
+        <div class="msg">📌 ${escapeHtml(notice.message)}</div>
+        <button class="dismiss-btn" id="dismissNotif">ปิด</button>
+      `;
+    } else {
+      dropdown.innerHTML = `<div class="empty">ยังไม่มีการแจ้งเตือน</div>`;
+    }
+    wrap.appendChild(dropdown);
+
+    const dismissBtn = document.getElementById('dismissNotif');
+    if(dismissBtn){
+      dismissBtn.onclick = (ev)=>{
+        ev.stopPropagation();
+        try{ localStorage.setItem(BANNER_SEEN_KEY, String(notice.ts)); }catch(err){ /* ignore */ }
+        dropdown.remove();
+        renderTopBanner();
+      };
+    }
+
+    const closeOnOutsideClick = (ev)=>{
+      if(!wrap.contains(ev.target)){
+        dropdown.remove();
+        document.removeEventListener('click', closeOnOutsideClick);
+      }
+    };
+    setTimeout(()=> document.addEventListener('click', closeOnOutsideClick), 0);
+  };
+}
+
 (async function init(){
+  renderAdminBar();
+  await renderTopBanner();
   document.getElementById('mainArea').innerHTML = '<div class="empty-note">กำลังโหลดข้อมูล...</div>';
   await loadEmployees();
   if(employees.length) currentEmployeeId = employees[0].id;
