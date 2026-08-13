@@ -307,6 +307,109 @@
     cursor:pointer;
   }
   .admin-danger-btn:hover{background:var(--red); color:#fff;}
+  .admin-view-btn{
+    font-family:'Sarabun',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border:1px solid var(--teal);
+    border-radius:6px;
+    background:#fff;
+    color:var(--teal);
+    cursor:pointer;
+  }
+  .admin-view-btn:hover{background:var(--teal); color:#fff;}
+
+  /* admin: view-all modal */
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .modal-card{
+    background:var(--paper);
+    border-radius:10px;
+    max-width:640px;
+    width:100%;
+    max-height:80vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 12px 32px rgba(0,0,0,.25);
+  }
+  .modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .modal-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:16px;
+  }
+  .modal-close{
+    font-size:20px;
+    line-height:1;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    color:var(--ink-soft);
+    padding:2px 6px;
+  }
+  .modal-close:hover{color:var(--ink);}
+  .modal-body{
+    padding:14px 18px;
+    overflow-y:auto;
+  }
+  .modal-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+  .modal-tab{
+    font-family:'Sarabun',sans-serif;
+    font-size:13px;
+    padding:6px 12px;
+    border:1px solid var(--ink);
+    border-radius:16px;
+    background:#fff;
+    cursor:pointer;
+  }
+  .modal-tab.active{background:var(--ink); color:var(--paper);}
+  .modal-row{
+    display:grid;
+    grid-template-columns:90px 110px 100px 1fr;
+    gap:8px;
+    align-items:center;
+    padding:7px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;
+  }
+  .modal-row-hour{font-family:'Space Grotesk',sans-serif; font-weight:600; color:var(--brass-dark);}
+  .modal-row-name{font-weight:600;}
+  .modal-row-type{
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+    text-align:center;
+    white-space:nowrap;
+  }
+  .modal-row-type.type-prep{background:var(--teal-light);}
+  .modal-row-type.type-dept{background:#FBEDD9;}
+  .modal-row-type.type-lunch{background:#E1EBF6;}
+  .modal-row-detail{color:var(--ink-soft);}
+  @media (max-width:560px){
+    .modal-row{grid-template-columns:70px 90px; grid-template-rows:auto auto;}
+    .modal-row-detail{grid-column:1 / -1;}
+  }
 
   /* WFH */
   th.wfh-day{background:#8A4E86 !important;}
@@ -336,6 +439,12 @@
     color:var(--red);
   }
   .wfh-btn.cancel:hover{background:var(--red); color:#fff;}
+  .wfh-btn:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+    border-style:dashed;
+  }
+  .wfh-btn:disabled:hover{background:inherit;}
 
   /* table */
   .grid-wrap{
@@ -442,6 +551,7 @@
     border-left:3px solid var(--brass-dark);
     padding:10px 14px;
     border-radius:4px;
+    line-height:1.7;
   }
 
   .toast{
@@ -484,7 +594,7 @@
 
   <header class="top">
     <div>
-      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.7</span></h1>
+      <h1>Daily task สำหรับขอ Work from home <span class="version-badge">v1.0.9</span></h1>
       <div class="sub">อังคาร–ศุกร์ 10:00–15:00 น.</div>
     </div>
     <div class="header-right">
@@ -505,10 +615,15 @@
     <span><i style="background:#FBEDD9"></i>งานฝ่าย</span>
     <span><i style="background:#E1EBF6"></i>พักทานอาหารกลางวัน</span>
     <span><i style="background:#8A4E86"></i>วันที่ขอ Work from home</span>
+    <span>ขอ WFH ได้เมื่อกรอกงานติดต่อกันครบ 3 ชม. ขึ้นไปในวันนั้น</span>
     <span>เลือกได้ 1 ตัวเลือกต่อช่อง (คลิกซ้ำเพื่อยกเลิก) · ต้องกรอกรายละเอียดเมื่อเลือก "เตรียมสอน" หรือ "งานฝ่าย" (พักเที่ยงไม่บังคับ) · ข้อมูลนี้แชร์ให้ทุกคนในทีมเห็นร่วมกัน</span>
   </div>
 
-  <div class="note-box">ในการขอ Work from home ให้ปฏิบัติตามข้อกำหนด</div>
+  <div class="note-box">
+    ในการขอ Work from home ให้ปฏิบัติตามข้อกำหนด<br>
+    การกรอกข้อมูลในเว็บนี้เพื่อประกอบการขออนุมัติ work from home<br>
+    การขอ work from home ทุกครั้งจะต้องกรอกคำร้องผ่าน empeo ด้วย
+  </div>
 
 </div>
 
@@ -817,9 +932,11 @@ function renderAdminBar(){
       <button id="adminBtn" class="admin-btn">สำหรับแอดมิน</button>
       <div id="adminPanel" class="admin-panel" style="display:none;">
         <span class="label">คำสั่งแอดมิน:</span>
+        <button id="viewAllBtn" class="admin-view-btn">ดูตารางคุณครูทั้งหมด</button>
         <button id="clearAllBtn" class="admin-danger-btn">เคลียร์ข้อมูลทั้งหมดของทุกคน</button>
       </div>
     </div>
+    <div id="allScheduleModal"></div>
   `;
   document.getElementById('adminBtn').onclick = ()=>{
     const panel = document.getElementById('adminPanel');
@@ -844,6 +961,83 @@ function renderAdminBar(){
       showToast('เคลียร์ข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง', true);
     }
   };
+  document.getElementById('viewAllBtn').onclick = showAllSchedulesModal;
+}
+
+async function showAllSchedulesModal(){
+  const modalHolder = document.getElementById('allScheduleModal');
+  if(!modalHolder) return;
+  modalHolder.innerHTML = `
+    <div class="modal-backdrop" id="allModalBackdrop">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div class="modal-title">ตารางคุณครูทั้งหมด · ${fmtRange()}</div>
+          <button class="modal-close" id="allModalClose">&times;</button>
+        </div>
+        <div class="modal-body"><div class="empty-note">กำลังโหลดข้อมูล...</div></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('allModalClose').onclick = ()=>{ modalHolder.innerHTML = ''; };
+  document.getElementById('allModalBackdrop').onclick = (e)=>{
+    if(e.target.id === 'allModalBackdrop') modalHolder.innerHTML = '';
+  };
+
+  if(!employees.length){
+    document.querySelector('.modal-body').innerHTML = '<div class="empty-note">ยังไม่มีรายชื่อพนักงาน</div>';
+    return;
+  }
+
+  const weekIso = isoDate(weekStart);
+  const allData = await Promise.all(employees.map(emp => loadSchedule(emp.id, weekIso)));
+
+  // perDay[dayKey] = array of { hour, empName, type, detail }
+  const perDay = {};
+  DAYS.forEach(d => perDay[d.key] = []);
+  employees.forEach((emp, i)=>{
+    const data = allData[i];
+    DAYS.forEach(d=>{
+      HOURS.forEach(h=>{
+        [1,2].forEach(slotNum=>{
+          const entry = data[d.key + '-' + h + '-s' + slotNum];
+          if(entry && entry.type){
+            perDay[d.key].push({ hour: h, empName: emp.name, type: entry.type, detail: entry.detail || '' });
+          }
+        });
+      });
+    });
+  });
+  DAYS.forEach(d => perDay[d.key].sort((a,b)=> a.hour - b.hour || a.empName.localeCompare(b.empName, 'th')));
+
+  const tabs = DAYS.map((d,i) => `<button class="modal-tab${i===0?' active':''}" data-day="${d.key}">${d.label}</button>`).join('');
+  const panels = DAYS.map((d,i) => {
+    const rows = perDay[d.key];
+    const rowsHtml = rows.length
+      ? rows.map(r => `
+          <div class="modal-row">
+            <span class="modal-row-hour">${r.hour}:00–${r.hour+1}:00</span>
+            <span class="modal-row-name">${escapeHtml(r.empName)}</span>
+            <span class="modal-row-type ${typeClass(r.type)}">${escapeHtml(r.type)}</span>
+            <span class="modal-row-detail">${escapeHtml(r.detail)}</span>
+          </div>`).join('')
+      : '<div class="empty-note">ไม่มีข้อมูลลงไว้ในวันนี้</div>';
+    return `<div class="modal-panel" data-day="${d.key}" style="display:${i===0?'block':'none'}">${rowsHtml}</div>`;
+  }).join('');
+
+  document.querySelector('.modal-body').innerHTML = `
+    <div class="modal-tabs">${tabs}</div>
+    ${panels}
+  `;
+
+  document.querySelectorAll('.modal-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      const day = tab.getAttribute('data-day');
+      document.querySelectorAll('.modal-tab').forEach(t=>t.classList.toggle('active', t===tab));
+      document.querySelectorAll('.modal-panel').forEach(p=>{
+        p.style.display = (p.getAttribute('data-day') === day) ? 'block' : 'none';
+      });
+    });
+  });
 }
 
 const TYPE_OPTIONS = ['เตรียมสอน', 'งานฝ่าย', 'พักทานอาหารกลางวัน'];
@@ -873,6 +1067,25 @@ function slotHtml(dayKey, hour, slotNum, data){
 
 const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 
+function hourHasData(data, dayKey, hour){
+  const s1 = data[dayKey + '-' + hour + '-s1'];
+  const s2 = data[dayKey + '-' + hour + '-s2'];
+  return !!(s1 && s1.type) || !!(s2 && s2.type);
+}
+
+function hasThreeConsecutiveFilledHours(data, dayKey){
+  let streak = 0;
+  for(const h of HOURS){
+    if(hourHasData(data, dayKey, h)){
+      streak++;
+      if(streak >= 3) return true;
+    } else {
+      streak = 0;
+    }
+  }
+  return false;
+}
+
 function buildTable(data, weekIso){
   const table = document.getElementById('schedTable');
   if(!table) return;
@@ -901,8 +1114,11 @@ function buildTable(data, weekIso){
   let tfoot = '<tfoot><tr class="wfh-row"><td class="hour-label">WFH</td>';
   DAYS.forEach((d)=>{
     const isWfh = !!data['wfh-' + d.key];
+    const eligible = isWfh || hasThreeConsecutiveFilledHours(data, d.key);
+    const disabledAttr = eligible ? '' : 'disabled';
+    const title = eligible ? '' : 'title="ต้องกรอกงานอย่างน้อย 1 อย่างต่อชั่วโมง ติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ WFH วันนี้ได้"';
     tfoot += `<td>
-      <button type="button" class="wfh-btn ${isWfh ? 'cancel' : 'request'}" data-day-key="${d.key}">
+      <button type="button" class="wfh-btn ${isWfh ? 'cancel' : 'request'}" data-day-key="${d.key}" ${disabledAttr} ${title}>
         ${isWfh ? 'ยกเลิกขอ Work from home' : 'ขอ Work from home'}
       </button>
     </td>`;
@@ -950,9 +1166,13 @@ function buildTable(data, weekIso){
   table.querySelectorAll('.wfh-btn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const dayKey = btn.getAttribute('data-day-key');
-      const dayInfo = DAYS.find(d=>d.key===dayKey);
       const wfhKey = 'wfh-' + dayKey;
       const requesting = !data[wfhKey];
+      if(requesting && !hasThreeConsecutiveFilledHours(data, dayKey)){
+        showToast('ต้องกรอกงานติดต่อกันครบ 3 ชั่วโมงก่อน ถึงจะขอ Work from home วันนี้ได้', true);
+        return;
+      }
+      const dayInfo = DAYS.find(d=>d.key===dayKey);
       if(requesting){ data[wfhKey] = true; } else { delete data[wfhKey]; }
       const ok = await saveSchedule(currentEmployeeId, weekIso, data);
       buildTable(data, weekIso);
